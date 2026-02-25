@@ -24,6 +24,10 @@ jobs:
             arch: 75;80
         pyver: ["3.13", "3.14"]
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Install system dependencies
         run: |
@@ -41,10 +45,9 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install Python
-        shell: bash
         run: |
           uv venv --python ${{ matrix.pyver }}
-          source .venv/bin/activate
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
 
       - name: Verify GLIBC version
         run: ldd --version
