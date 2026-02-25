@@ -41,6 +41,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install Python
+        shell: bash
         run: |
           uv venv --python ${{ matrix.pyver }}
           source .venv/bin/activate
