@@ -1,0 +1,88 @@
+name: Build Release (CUDA)
+
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  build_wheels:
+    name: Build Wheel CUDA ${{ matrix.cuda_config.ver }} Py ${{ matrix.pyver }}
+    runs-on: ubuntu-latest
+    container:
+      image: nvidia/cuda:${{ matrix.cuda_config.ver }}-devel-ubuntu24.04
+    permissions:
+      id-token: write
+      contents: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda_config:
+          - ver: 13.1.1
+            short: cu131
+            arch: 75
+        pyver: ["3.14"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          submodules: recursive
+
+      - name: Setup uv and Python
+        uses: astral-sh/setup-uv@5a7eac68fb9809dea845d802897dc5c723910fa3 # v7
+        with:
+          version: "latest"
+          enable-cache: true
+          python-version: ${{ matrix.pyver }}
+
+      - name: Verify GLIBC version
+        run: ldd --version
+
+      - name: Verify installation
+        run: |
+          python --version
+          uv --version
+          cmake --version
+          nvcc --version
+          nvidia-smi || true
+
+      - name: Build Wheel
+        working-directory: vendor/llama-cpp-python
+        env:
+          VERBOSE: 1
+          CMAKE_ARGS: >-
+            -DGGML_CUDA=on
+            -DLLAVA_BUILD=off
+            -DCMAKE_CUDA_ARCHITECTURES=${{ matrix.cuda_config.arch }}
+            -DGGML_CUDA_FORCE_MMQ=OFF
+            -DGGML_AVX2=off
+            -DGGML_FMA=off
+            -DGGML_F16C=off
+            -DLLAMA_BUILD_EXAMPLES=OFF
+            -DLLAMA_BUILD_TESTS=OFF
+            -DLLAMA_BUILD_SERVER=OFF
+            -DCMAKE_EXE_LINKER_FLAGS="-L/usr/local/cuda/lib64/stubs -lcuda"
+        run: |
+          # Rename the release version with +cu{cuda_ver} build tag
+          sed -i 's/__version__ = "\([^"]*\)"/__version__ = "\1+${{ matrix.cuda_config.short }}"/' llama_cpp/__init__.py
+          
+          # Build wheel using uv
+          uv -v build --no-create-gitignore --python cpython@${{ matrix.pyver }} --wheel
+
+      - name: List built wheels
+        run: ls -lh vendor/llama-cpp-python/dist/*.whl
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2
+        with:
+          files: vendor/llama-cpp-python/dist/*.whl
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: 'vendor/llama-cpp-python/dist/*.whl'
