@@ -41,7 +41,9 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install Python
-        run: uv venv --python ${{ matrix.pyver }}
+        run: |
+          uv venv --python ${{ matrix.pyver }}
+          source .venv/bin/activate
 
       - name: Verify GLIBC version
         run: ldd --version
