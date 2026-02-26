@@ -1,4 +1,4 @@
-name: Build Release (CUDA Test)
+name: Build Release (CUDA)
 
 on: workflow_dispatch
 
@@ -39,27 +39,25 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install uv
+      - name: Install UV and Python
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install Python
-        run: |
+          
           uv venv --python ${{ matrix.pyver }}
           echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
 
-      - name: Verify GLIBC version
-        run: ldd --version
-
-      - name: Verify installation
+      - name: Environment Diagnostics
         run: |
-          python --version
-          uv --version
-          cmake --version
-          nvcc --version
-          nvidia-smi || true
-
+          echo "========== SYSTEM DIAGNOSTICS =========="
+          echo "GLIBC:   $(ldd --version | head -n1)"
+          echo "Python:  $(python --version)"
+          echo "uv:      $(uv --version)"
+          echo "CMake:   $(cmake --version | head -n1)"
+          echo "nvcc:    $(nvcc --version 2>/dev/null | grep release || echo 'not found')"
+          echo "Driver:  $(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null || echo 'not available')"
+          echo "========================================"
+          
       - name: Build Wheel
         working-directory: vendor/llama-cpp-python
         env:
