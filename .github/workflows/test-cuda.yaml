@@ -44,6 +44,8 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           
+      - name: Install Python 
+        run: |
           uv venv --python ${{ matrix.pyver }}
           echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
 
