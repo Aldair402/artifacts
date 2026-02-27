@@ -21,8 +21,8 @@ jobs:
         cuda_config:
           - ver: 13.1.1
             short: cu131
-            arch: 75;80
-        pyver: ["3.13", "3.14"]
+            arch: 75
+        pyver: ["3.14"]
 
     defaults:
       run:
