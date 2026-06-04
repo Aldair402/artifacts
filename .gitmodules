@@ -1,6 +1,6 @@
 [submodule "vendor/llama-cpp-python"]
 	path = vendor/llama-cpp-python
-	url = git@github.com:abetlen/llama-cpp-python.git
+	url = https://github.com/abetlen/llama-cpp-python.git
 	branch = main
 
 [submodule "vendor/negspacy"]
