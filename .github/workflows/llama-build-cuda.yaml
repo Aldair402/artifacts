@@ -69,7 +69,6 @@ jobs:
           VERBOSE: 1
           CMAKE_ARGS: >-
             -DGGML_CUDA=on
-            -DGGML_CPU=off
             -DLLAVA_BUILD=off
             -DCMAKE_CUDA_ARCHITECTURES=${{ matrix.cuda_config.arch }}
             -DGGML_CUDA_FORCE_MMQ=OFF
